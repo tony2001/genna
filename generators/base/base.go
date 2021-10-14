@@ -65,6 +65,9 @@ type Options struct {
 	// Default []string{"public.*"}
 	Tables []string
 
+	// Package for model files
+	Package string
+
 	// Generate model for foreign keys,
 	// even if Tables not listed in Tables param
 	// will not generate fks if schema not listed
@@ -119,49 +122,47 @@ func AddFlags(command *cobra.Command) {
 	}
 
 	flags.StringP(Pkg, "p", "", "package for model files. if not set last folder name in output path will be used")
-
 	flags.StringSliceP(Tables, "t", []string{"public.*"}, "table names for model generation separated by comma\nuse 'schema_name.*' to generate model for every table in model")
 	flags.BoolP(FollowFKs, "f", false, "generate models for foreign keys, even if it not listed in Tables\n")
-
 	flags.Bool(uuidFlag, false, "use github.com/google/uuid as type for uuid")
-
 	flags.StringSlice(customTypesFlag, []string{}, "set custom types separated by comma\nformat: <postgresql_type>:<go_import>.<go_type>\nexamples: uuid:github.com/google/uuid.UUID,point:src/model.Point,bytea:string\n")
-
 	flags.IntP(GoPgVer, "g", 10, "specify go-pg version (8, 9 and 10 are supported)")
 }
 
 // ReadFlags reads basic flags from command
-func ReadFlags(command *cobra.Command) (conn, output, pkg string, tables []string, followFKs bool, gopgVer int, customTypes model.CustomTypeMapping, err error) {
-	var customTypesStrings []string
-	uuid := false
+func ReadFlags(command *cobra.Command) (res Options, err error) {
+	var (
+		uuid               bool
+		customTypesStrings []string
+	)
 
 	flags := command.Flags()
 
-	if conn, err = flags.GetString(Conn); err != nil {
+	if res.URL, err = flags.GetString(Conn); err != nil {
 		return
 	}
 
-	if output, err = flags.GetString(Output); err != nil {
+	if res.Output, err = flags.GetString(Output); err != nil {
 		return
 	}
 
-	if pkg, err = flags.GetString(Pkg); err != nil {
+	if res.Package, err = flags.GetString(Pkg); err != nil {
 		return
 	}
 
-	if strings.Trim(pkg, " ") == "" {
-		pkg = path.Base(path.Dir(output))
+	if strings.Trim(res.Package, " ") == "" {
+		res.Package = path.Base(path.Dir(res.Output))
 	}
 
-	if tables, err = flags.GetStringSlice(Tables); err != nil {
+	if res.Tables, err = flags.GetStringSlice(Tables); err != nil {
 		return
 	}
 
-	if followFKs, err = flags.GetBool(FollowFKs); err != nil {
+	if res.FollowFKs, err = flags.GetBool(FollowFKs); err != nil {
 		return
 	}
 
-	if gopgVer, err = flags.GetInt(GoPgVer); err != nil {
+	if res.GoPgVer, err = flags.GetInt(GoPgVer); err != nil {
 		return
 	}
 
@@ -169,7 +170,7 @@ func ReadFlags(command *cobra.Command) (conn, output, pkg string, tables []strin
 		return
 	}
 
-	if customTypes, err = model.ParseCustomTypes(customTypesStrings); err != nil {
+	if res.CustomTypes, err = model.ParseCustomTypes(customTypesStrings); err != nil {
 		return
 	}
 
@@ -177,12 +178,12 @@ func ReadFlags(command *cobra.Command) (conn, output, pkg string, tables []strin
 		return
 	}
 
-	if uuid && !customTypes.Has(model.TypePGUuid) {
-		customTypes.Add(model.TypePGUuid, "uuid.UUID", "github.com/google/uuid")
+	if uuid && !res.CustomTypes.Has(model.TypePGUuid) {
+		res.CustomTypes.Add(model.TypePGUuid, "uuid.UUID", "github.com/google/uuid")
 	}
 
-	if gopgVer < 8 || gopgVer > 10 {
-		err = fmt.Errorf("go-pg version %d not supported", gopgVer)
+	if res.GoPgVer < 8 || res.GoPgVer > 10 {
+		err = fmt.Errorf("go-pg version %d not supported", res.GoPgVer)
 		return
 	}
 
