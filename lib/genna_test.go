@@ -19,6 +19,7 @@ func TestGenna_Read(t *testing.T) {
 	t.Run("Should read DB", func(t *testing.T) {
 		entities, err := genna.Read([]string{"public.*"}, true, false, 9, nil)
 		if err != nil {
+			skipIfNoRole(t, err)
 			t.Errorf("Genna.Read error %v", err)
 			return
 		}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/dizzyfool/genna/model"
@@ -20,6 +21,10 @@ func TestGenerator_Generate(t *testing.T) {
 	generator.options.CustomTypes.Add(model.TypePGUuid, "uuid.UUID", "github.com/google/uuid")
 
 	if err := generator.Generate(); err != nil {
+		if strings.Contains(err.Error(), "role \"genna\" does not exist") {
+			t.Skip()
+		}
+
 		t.Errorf("generate error = %v", err)
 		return
 	}

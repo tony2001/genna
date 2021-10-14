@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/dizzyfool/genna/model"
@@ -22,6 +23,10 @@ func TestGenerator_Generate(t *testing.T) {
 	// generator.options.AddJSONTag = true
 
 	if err := generator.Generate(); err != nil {
+		if strings.Contains(err.Error(), "role \"genna\" does not exist") {
+			t.Skip()
+		}
+
 		t.Errorf("generate error = %v", err)
 		return
 	}

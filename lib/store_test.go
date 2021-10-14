@@ -2,6 +2,7 @@ package genna
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/dizzyfool/genna/model"
@@ -16,6 +17,12 @@ func prepareStore() (*store, error) {
 	}
 
 	return newStore(db), nil
+}
+
+func skipIfNoRole(t *testing.T, err error) {
+	if strings.Contains(err.Error(), "role \"genna\" does not exist") {
+		t.Skip()
+	}
 }
 
 func Test_format(t *testing.T) {
@@ -246,6 +253,7 @@ func Test_store_Tables(t *testing.T) {
 	t.Run("Should get all tables from test DB", func(t *testing.T) {
 		tables, err := store.Tables([]string{"public.*", "geo.*"})
 		if err != nil {
+			skipIfNoRole(t, err)
 			t.Errorf("get tables error = %v", err)
 			return
 		}
@@ -259,6 +267,7 @@ func Test_store_Tables(t *testing.T) {
 	t.Run("Should get specific table from test DB", func(t *testing.T) {
 		tables, err := store.Tables([]string{"public.users"})
 		if err != nil {
+			skipIfNoRole(t, err)
 			t.Errorf("get tables error = %v", err)
 			return
 		}
@@ -272,6 +281,7 @@ func Test_store_Tables(t *testing.T) {
 	t.Run("Should get specific & geo tables from test DB", func(t *testing.T) {
 		tables, err := store.Tables([]string{"public.users", "geo.*"})
 		if err != nil {
+			skipIfNoRole(t, err)
 			t.Errorf("get tables error = %v", err)
 			return
 		}
@@ -293,6 +303,7 @@ func Test_store_Relations(t *testing.T) {
 	t.Run("Should get all relations from test DB", func(t *testing.T) {
 		tables, err := store.Tables([]string{"public.*"})
 		if err != nil {
+			skipIfNoRole(t, err)
 			t.Errorf("get tables error = %v", err)
 			return
 		}
@@ -320,6 +331,7 @@ func Test_store_Schemas(t *testing.T) {
 	t.Run("Should get all schemas from test DB", func(t *testing.T) {
 		tables, err := store.Schemas()
 		if err != nil {
+			skipIfNoRole(t, err)
 			t.Errorf("get tables error = %v", err)
 			return
 		}
@@ -341,6 +353,7 @@ func Test_store_Columns(t *testing.T) {
 	t.Run("Should get all columns from test DB", func(t *testing.T) {
 		tables, err := store.Tables([]string{"public.*"})
 		if err != nil {
+			skipIfNoRole(t, err)
 			t.Errorf("get tables error = %v", err)
 			return
 		}
