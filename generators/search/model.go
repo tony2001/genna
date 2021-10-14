@@ -88,7 +88,7 @@ func NewTemplateEntity(entity model.Entity, options Options) TemplateEntity {
 			continue
 		}
 
-		columns = append(columns, NewTemplateColumn(entity, column, options))
+		columns = append(columns, NewTemplateColumn(column, options))
 		if column.Import != "" {
 			imports.Add(column.Import)
 		}
@@ -119,7 +119,7 @@ type TemplateColumn struct {
 }
 
 // NewTemplateColumn creates a column for template
-func NewTemplateColumn(_ model.Entity, column model.Column, options Options) TemplateColumn {
+func NewTemplateColumn(column model.Column, options Options) TemplateColumn {
 	if !options.KeepPK && column.IsPK {
 		column.GoName = util.ID
 	}
